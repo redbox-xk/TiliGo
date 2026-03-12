@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TiliGo API - Food & Delivery Platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: stores
+    description: Store/Restaurant operations
+  - name: products
+    description: Product operations
+  - name: orders
+    description: Order operations
+  - name: delivery
+    description: Delivery driver operations
+  - name: notifications
+    description: Notification operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,455 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /stores:
+    get:
+      operationId: getStores
+      tags: [stores]
+      summary: Get all stores
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of stores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Store"
+    post:
+      operationId: registerStore
+      tags: [stores]
+      summary: Register a new store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterStoreInput"
+      responses:
+        "201":
+          description: Store registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+        "409":
+          description: Business number already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/{storeId}:
+    get:
+      operationId: getStore
+      tags: [stores]
+      summary: Get store by ID
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Store details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/login:
+    post:
+      operationId: loginStore
+      tags: [stores]
+      summary: Store login with business number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StoreLoginInput"
+      responses:
+        "200":
+          description: Store logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/{storeId}/products:
+    get:
+      operationId: getStoreProducts
+      tags: [products]
+      summary: Get products for a store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product for a store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductInput"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /stores/{storeId}/products/{productId}:
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductInput"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /stores/{storeId}/orders:
+    get:
+      operationId: getStoreOrders
+      tags: [orders]
+      summary: Get orders for a store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new order (no auth required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderInput"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order by ID
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders/{orderId}/status:
+    patch:
+      operationId: updateOrderStatus
+      tags: [orders]
+      summary: Update order status
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderStatusInput"
+      responses:
+        "200":
+          description: Order status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /delivery/register:
+    post:
+      operationId: registerDelivery
+      tags: [delivery]
+      summary: Register a delivery driver with ID number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDeliveryInput"
+      responses:
+        "201":
+          description: Driver registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeliveryDriver"
+        "409":
+          description: ID number already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /delivery/login:
+    post:
+      operationId: loginDelivery
+      tags: [delivery]
+      summary: Delivery driver login with ID number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryLoginInput"
+      responses:
+        "200":
+          description: Driver logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeliveryDriver"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /delivery/{driverId}/orders:
+    get:
+      operationId: getAvailableOrders
+      tags: [delivery]
+      summary: Get available orders for delivery
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Available orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /delivery/{driverId}/accept/{orderId}:
+    post:
+      operationId: acceptOrder
+      tags: [delivery]
+      summary: Driver accepts an order
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /delivery/{driverId}/active:
+    get:
+      operationId: getDriverActiveOrders
+      tags: [delivery]
+      summary: Get driver's active orders
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Driver active orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /notifications/{userId}:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get notifications for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userType
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{notificationId}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +491,365 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    Store:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        businessNumber:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+        imageUrl:
+          type: string
+        coverImageUrl:
+          type: string
+        rating:
+          type: number
+        deliveryTime:
+          type: string
+        minOrder:
+          type: number
+        deliveryFee:
+          type: number
+        isOpen:
+          type: boolean
+        isDemo:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - category
+        - businessNumber
+        - address
+        - city
+        - phone
+        - rating
+        - deliveryTime
+        - minOrder
+        - deliveryFee
+        - isOpen
+        - isDemo
+        - createdAt
+
+    RegisterStoreInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        businessNumber:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+        imageUrl:
+          type: string
+        coverImageUrl:
+          type: string
+        deliveryTime:
+          type: string
+        minOrder:
+          type: number
+        deliveryFee:
+          type: number
+      required:
+        - name
+        - category
+        - businessNumber
+        - address
+        - city
+        - phone
+        - password
+
+    StoreLoginInput:
+      type: object
+      properties:
+        businessNumber:
+          type: string
+        password:
+          type: string
+      required:
+        - businessNumber
+        - password
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        storeId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        imageUrl:
+          type: string
+        isAvailable:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - storeId
+        - name
+        - price
+        - category
+        - isAvailable
+        - createdAt
+
+    CreateProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        imageUrl:
+          type: string
+        isAvailable:
+          type: boolean
+      required:
+        - name
+        - price
+        - category
+
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+      required:
+        - productId
+        - productName
+        - quantity
+        - price
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        storeId:
+          type: integer
+        storeName:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        customerAddress:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        totalAmount:
+          type: number
+        deliveryFee:
+          type: number
+        status:
+          type: string
+          enum: [pending, confirmed, preparing, ready, picked_up, delivered, cancelled]
+        driverId:
+          type: integer
+        estimatedDeliveryTime:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - storeId
+        - storeName
+        - customerName
+        - customerPhone
+        - customerAddress
+        - items
+        - totalAmount
+        - deliveryFee
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateOrderInput:
+      type: object
+      properties:
+        storeId:
+          type: integer
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        customerAddress:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        notes:
+          type: string
+      required:
+        - storeId
+        - customerName
+        - customerPhone
+        - customerAddress
+        - items
+
+    UpdateOrderStatusInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, preparing, ready, picked_up, delivered, cancelled]
+        estimatedDeliveryTime:
+          type: string
+      required:
+        - status
+
+    DeliveryDriver:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        idNumber:
+          type: string
+        phone:
+          type: string
+        vehicleType:
+          type: string
+        isActive:
+          type: boolean
+        totalDeliveries:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - idNumber
+        - phone
+        - vehicleType
+        - isActive
+        - totalDeliveries
+        - createdAt
+
+    RegisterDeliveryInput:
+      type: object
+      properties:
+        name:
+          type: string
+        idNumber:
+          type: string
+        phone:
+          type: string
+        vehicleType:
+          type: string
+        password:
+          type: string
+      required:
+        - name
+        - idNumber
+        - phone
+        - vehicleType
+        - password
+
+    DeliveryLoginInput:
+      type: object
+      properties:
+        idNumber:
+          type: string
+        password:
+          type: string
+      required:
+        - idNumber
+        - password
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        userType:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+        orderId:
+          type: integer
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - userType
+        - title
+        - message
+        - type
+        - isRead
+        - createdAt
