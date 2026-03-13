@@ -14,9 +14,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.redboxx.tiligo"   <-- ADD THIS
     },
-    "android": {},
+    "android": {
+      "package": "com.redboxx.tiligo"          <-- ADD THIS
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
